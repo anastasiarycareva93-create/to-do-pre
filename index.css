@@ -1,19 +1,115 @@
-@import url(./normalize.css);
-@import url(./fonts/inter.css);
-@import url(./blocks/body/body.css);
-@import url(./blocks/main/main.css);
+let items = [
+  "Сделать проектную работу",
+  "Полить цветы",
+  "Пройти туториал по Реакту",
+  "Сделать фронт для своего проекта",
+  "Прогуляться по улице в солнечный день",
+  "Помыть посуду",
+];
 
-@import url(./blocks/to-do/to-do.css);
-@import url(./blocks/to-do/__title/to-do__title.css);
-@import url(./blocks/to-do/__form/to-do__form.css);
-@import url(./blocks/to-do/__input/to-do__input.css);
-@import url(./blocks/to-do/__submit/to-do__submit.css);
-@import url(./blocks/to-do/__list/to-do__list.css);
-@import url(./blocks/to-do/__item/to-do__item.css);
-@import url(./blocks/to-do/__item-text/to-do__item-text.css);
-@import url(./blocks/to-do/__item-button/to-do__item-button.css);
-@import url(./blocks/to-do/__item-button/_type/to-do__item-button_type_delete.css);
-@import url(./blocks/to-do/__item-button/_type/to-do__item-button_type_duplicate.css);
-@import url(./blocks/to-do/__item-button/_type/to-do__item-button_type_edit.css);
+const listElement = document.querySelector(".to-do__list");
+const formElement = document.querySelector(".to-do__form");
+const inputElement = document.querySelector(".to-do__input");
 
-@import url(./blocks/footer/footer.css);
+// Функция загрузки задач из localStorage или возврат массива по умолчанию
+function loadTasks() {
+  const savedTasks = localStorage.getItem("tasks");
+  if (savedTasks) {
+    return JSON.parse(savedTasks);
+  }
+  return items;
+}
+
+// Функция создания карточки задачи
+function createItem(item) {
+  const template = document.getElementById("to-do__item-template");
+  const clone = template.content.cloneNode(true);
+  const textElement = clone.querySelector(".to-do__item-text");
+  const deleteButton = clone.querySelector(".to-do__item-button_type_delete");
+  const duplicateButton = clone.querySelector(".to-do__item-button_type_duplicate");
+  const editButton = clone.querySelector(".to-do__item-button_type_edit");
+
+  // Заполняем текст задачи
+  textElement.textContent = item;
+
+  // Обработчик удаления
+  deleteButton.addEventListener("click", () => {
+    const taskItem = deleteButton.closest(".to-do__item");
+    taskItem.remove();
+    const updatedTasks = getTasksFromDOM();
+    saveTasks(updatedTasks);
+  });
+
+  // Обработчик копирования
+  duplicateButton.addEventListener("click", () => {
+    const currentText = textElement.textContent;
+    const newTaskElement = createItem(currentText);
+    listElement.prepend(newTaskElement);
+    const updatedTasks = getTasksFromDOM();
+    saveTasks(updatedTasks);
+  });
+
+  // Обработчик редактирования
+  editButton.addEventListener("click", () => {
+    textElement.contentEditable = "true";
+    textElement.focus();
+  });
+
+  textElement.addEventListener("blur", () => {
+    textElement.contentEditable = "false";
+    const updatedTasks = getTasksFromDOM();
+    saveTasks(updatedTasks);
+  });
+
+  return clone.firstElementChild;
+}
+
+// Функция получения текущих задач из DOM
+function getTasksFromDOM() {
+  const itemsNamesElements = document.querySelectorAll(".to-do__item-text");
+  const tasks = [];
+  itemsNamesElements.forEach((element) => {
+    tasks.push(element.textContent);
+  });
+  return tasks;
+}
+
+// Функция сохранения задач в localStorage
+function saveTasks(tasks) {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+// Функция отрисовки всех задач при загрузке страницы
+function renderAllTasks() {
+  listElement.innerHTML = "";
+  const tasks = loadTasks();
+  tasks.forEach((task) => {
+    const taskElement = createItem(task);
+    listElement.appendChild(taskElement);
+  });
+}
+
+// Обработчик отправки формы
+function handleFormSubmit(event) {
+  event.preventDefault();
+  
+  const newTaskText = inputElement.value.trim();
+  
+  if (newTaskText === "") {
+    return;
+  }
+  
+  const newTaskElement = createItem(newTaskText);
+  listElement.prepend(newTaskElement);
+  
+  inputElement.value = "";
+  
+  const currentTasks = getTasksFromDOM();
+  saveTasks(currentTasks);
+}
+
+// Навешиваем обработчик на форму
+formElement.addEventListener("submit", handleFormSubmit);
+
+// Отрисовываем задачи при загрузке страницы
+renderAllTasks();
