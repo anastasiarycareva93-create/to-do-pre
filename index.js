@@ -16,7 +16,7 @@ function loadTasks() {
   if (savedTasks) {
     return JSON.parse(savedTasks);
   }
-  return [...items];
+  return items;
 }
 
 function createItem(item) {
@@ -31,15 +31,12 @@ function createItem(item) {
 
   deleteButton.addEventListener("click", () => {
     const taskItem = deleteButton.closest(".to-do__item");
-    if (taskItem) {
-      taskItem.remove();
-      saveTasks(getTasksFromDOM());
-    }
+    taskItem.remove();
+    saveTasks(getTasksFromDOM());
   });
 
   duplicateButton.addEventListener("click", () => {
-    const currentText = textElement.textContent;
-    const newTask = createItem(currentText);
+    const newTask = createItem(textElement.textContent);
     listElement.prepend(newTask);
     saveTasks(getTasksFromDOM());
   });
@@ -51,9 +48,6 @@ function createItem(item) {
 
   textElement.addEventListener("blur", () => {
     textElement.contentEditable = "false";
-    if (textElement.textContent.trim() === "") {
-      textElement.textContent = item;
-    }
     saveTasks(getTasksFromDOM());
   });
 
@@ -73,13 +67,13 @@ function saveTasks(tasks) {
   localStorage.setItem("tasks", JSON.stringify(tasks));
 }
 
-function renderTasks() {
-  const tasks = loadTasks();
-  tasks.forEach((task) => {
-    listElement.appendChild(createItem(task));
-  });
-}
+// Отрисовка задач при загрузке
+const tasks = loadTasks();
+tasks.forEach((task) => {
+  listElement.append(createItem(task));
+});
 
+// Обработчик отправки формы
 formElement.addEventListener("submit", (e) => {
   e.preventDefault();
   const newTaskText = inputElement.value.trim();
@@ -90,5 +84,3 @@ formElement.addEventListener("submit", (e) => {
   inputElement.value = "";
   saveTasks(getTasksFromDOM());
 });
-
-renderTasks();
